@@ -8,13 +8,11 @@ public class Plants {
     private int yCoord;
     private String type;
     private BufferedImage image;
-    private long lastSunDropTime;
 
     public Plants(int x, int y, String type) {
         this.xCoord = x;
         this.yCoord = y;
         this.type = type;
-        this.lastSunDropTime = System.currentTimeMillis();
 
         try {
             if ("peashooter".equals(type)) {
@@ -45,14 +43,5 @@ public class Plants {
 
     public boolean isSunflower() {
         return "sunflower".equals(type);
-    }
-
-    public boolean dropSun() {
-        long currentTime = System.currentTimeMillis();
-        if (isSunflower() && currentTime - lastSunDropTime >= 15000) {
-            lastSunDropTime = currentTime;
-            return true; // sun was dropped
-        }
-        return false; // sun was not dropped
     }
 }
