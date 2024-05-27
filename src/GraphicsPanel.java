@@ -8,12 +8,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class GraphicsPanel extends JPanel implements KeyListener, MouseListener, ActionListener {
+    private ArrayList<Zombie> zombies;
+    private int zombieSpawnInterval;
+    private int zombieSpawnCounter;
+    private int currentLane;
     private BufferedImage background;
     private BufferedImage sunImg;
     private BufferedImage peashooterCard;
     private BufferedImage repeaterCard;
     private BufferedImage sunflowerCard;
     private BufferedImage wallnutCard;
+    private BufferedImage browncoat;
+    private BufferedImage conehead;
     private Rectangle sunflower;
     private Rectangle peashooter;
     private Rectangle repeater;
@@ -38,6 +44,8 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
             repeaterCard = ImageIO.read(new File("images/repeaterCard.png"));
             sunflowerCard = ImageIO.read(new File("images/sunflowerCard.png"));
             wallnutCard = ImageIO.read(new File("images/wallnutCard.png"));
+            browncoat = ImageIO.read(new File("images/browncoat.png"));
+            conehead = ImageIO.read(new File("images/conehead.png"));
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -49,13 +57,18 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
         suns = new ArrayList<>();
         sun = 10000;
         time = 0;
-        timer = new Timer(1000, this);
+        timer = new Timer(16, this);
         timer.start();
 
         addKeyListener(this);
         addMouseListener(this);
         setFocusable(true);
         requestFocusInWindow();
+
+        zombies = new ArrayList<>();
+        zombieSpawnInterval = 1200; // Spawn a zombie every 20 seconds
+        zombieSpawnCounter = 0;
+        currentLane = 0;
     }
 
     @Override
@@ -77,6 +90,9 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
 
         for (Sun sun : suns) {
             g.drawImage(sun.getImage(), sun.getX(), sun.getY(), null);
+        }
+        for (Zombie zombie : zombies) {
+            g.drawImage(browncoat, zombie.getX(), zombie.getY(), null);
         }
     }
 
@@ -118,6 +134,14 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
             }
         }
     }
+    private void spawnZombie() {
+        int lane = (int) (Math.random() * 5); // randomly select a lane (0-4)
+        int y = lane * 110 + 60; // calculate the y-coordinate based on the lane
+        int speed = 1;
+        int hp = (lane == 4) ? 3 : 1; // set hp (3 for conehead zombie, 1 for browncoat zombie)
+        Zombie zombie = new Zombie(getWidth(), y, speed, hp);
+        zombies.add(zombie);
+    }
 
     @Override
     public void mouseEntered(MouseEvent e) {}
@@ -129,14 +153,14 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof Timer) {
             time++;
-            if (time % 24 == 0) {
+            if (time % 800 == 0) {
                 for (Plants plant : plants) {
                     if (plant.isSunflower()) {
                         suns.add(new Sun(plant.getxCoord(), plant.getyCoord(), sunImg, true));
                     } // sunflower drops sun every 24s
                 }
             }
-            if (time % 10 == 0) {
+            if (time % 333 == 0) {
                 int randomX = (int) (Math.random() * (getWidth() - sunImg.getWidth()));
                 suns.add(new Sun(randomX, 0, sunImg, false));
             } // sky drops sun every 10s
@@ -149,6 +173,25 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
                     i--;
                 }
             }
+            zombieSpawnCounter++;
+            if (zombieSpawnCounter >= zombieSpawnInterval) {
+                zombieSpawnCounter = 0;
+                spawnZombie();
+            }
+            if (zombieSpawnInterval > 60) { // cap at 1 second spawn interval
+                zombieSpawnInterval -= 60; // decrease spawn interval by 1 second every spawn
+            }
+
+            // move zombies
+            for (int i = 0; i < zombies.size(); i++) {
+                Zombie zombie = zombies.get(i);
+                zombie.update();
+                if (zombie.getX() < -60) {
+                    zombies.remove(i);
+                    i--;
+                }
+            }
+
         }
         repaint();
     }

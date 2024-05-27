@@ -28,7 +28,7 @@ public class Sun {
 
     public void update() {
         if (!fromSunflower) {
-            y += 10; // sun drops down if not from sunflower
+            y += 2; // sun drops down if not from sunflower
         }
     }
 
