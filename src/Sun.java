@@ -33,6 +33,6 @@ public class Sun {
     }
 
     public Rectangle getBounds() {
-        return new Rectangle(x, y, image.getWidth(), image.getHeight());
+        return new Rectangle(x, y, image.getWidth() + 50, image.getHeight() + 50);
     }
 }
