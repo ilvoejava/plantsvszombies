@@ -23,7 +23,7 @@ public class Zombie {
     }
 
     public void hit() {
-        health-=3;
+        health--;
     }
 
     public int getHealth() {

@@ -31,6 +31,8 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
     private Rectangle wallnut;
     private String selectedPlant;
     private boolean plantPlacedThisClick;
+    private boolean gameWon;
+    private boolean gameOver;
 
     private Timer timer;
     private ArrayList<Plants> plants;
@@ -42,7 +44,7 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
     private final int WALLNUT_COST = 50;
     private final int REPEATER_COST = 200;
     private static final int browncoat_hp = 7;
-    private static final int conehead_hp  = 13;
+    private static final int conehead_hp = 13;
     private static final int buckethead_hp = 21;
 
     public GraphicsPanel(String name) {
@@ -67,11 +69,13 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
         plants = new ArrayList<>();
         suns = new ArrayList<>();
         peas = new ArrayList<>();
-        sun = 500;
+        sun = 2475;
         time = 0;
         phase = 0;
         timer = new Timer(16, this);
         timer.start();
+        gameWon = false;
+        gameOver = false;
 
         addKeyListener(this);
         addMouseListener(this);
@@ -79,7 +83,7 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
         requestFocusInWindow();
 
         zombies = new ArrayList<>();
-        zombieSpawnInterval = 1200; // Initial spawn interval (20 seconds)
+        zombieSpawnInterval = 1200; // initial spawn interval (20 seconds)
         zombieSpawnCounter = 0;
     }
 
@@ -109,7 +113,19 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
         for (Zombie zombie : zombies) {
             g.drawImage(zombie.getImage(), zombie.getX(), zombie.getY(), null);
         }
+        if (gameWon) {
+            g.setFont(new Font("Courier New", Font.BOLD, 48));
+            g.setColor(Color.RED);
+            g.drawString("Congratulations!", 300, 200);
+            g.drawString("You Win!", 400, 300);
+        }
+        if (gameOver) {
+            g.setColor(Color.RED);
+            g.setFont(new Font("Courier New", Font.BOLD, 48));
+            g.drawString("Game Over - You Lost!", 300, 200);
+        }
     }
+
 
     @Override
     public void mouseClicked(MouseEvent e) {
@@ -126,7 +142,7 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
 
     @Override
     public void mousePressed(MouseEvent e) {
-        plantPlacedThisClick = false; // Reset the flag when a mouse press occurs
+        plantPlacedThisClick = false; // reset the flag when a mouse press occurs
     }
 
     @Override
@@ -144,7 +160,7 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
             }
         }
         if (e.getButton() == MouseEvent.BUTTON1) {
-            // Check if the click intersects with any sun object
+            // check if the click intersects with any sun object
             boolean clickedOnSun = false;
             for (int i = 0; i < suns.size(); i++) {
                 Sun sun = suns.get(i);
@@ -155,13 +171,13 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
             }
 
             if (!clickedOnSun && selectedPlant != null && sun >= getPlantCost(selectedPlant) && !plantPlacedThisClick) {
-                // Check if the click is within the boundaries of the lawn
+                // check if the click is within the boundaries of the lawn
                 if (clicked.y >= 80 && clicked.y < 525) {
-                    // Check if the click is not on the plant packets
+                    // check if the click is not on the plant packets
                     if (!(clicked.x >= 0 && clicked.x < 120)) {
-                        // Calculate the lane based on the clicked y-coordinate
-                        int lane = (clicked.y - 50) / 95; // Adjust according to your lane positions
-                        if (lane >= 0 && lane <= 4) { // Ensure lane is within valid range
+                        // calculate the lane based on the clicked y-coordinate
+                        int lane = (clicked.y - 50) / 95;
+                        if (lane >= 0 && lane <= 4) {
                             int y = 50 + lane * 95;
                             Plants plant = new Plants(clicked.x, y + 50, selectedPlant);
                             plants.add(plant);
@@ -177,11 +193,11 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
 
     private void spawnZombie() {
         int lane = (int) (Math.random() * 5);
-        int y = 50 + lane * 95; // Adjust according to your lane positions
+        int y = 50 + lane * 95;
         int zombieType = 0;
 
         if (phase == 0 || phase == 1 || phase == 2) {
-            // first phase: Only browncoat zombies
+            // first phase: only browncoat zombies
             zombieType = 0;
         } else if (phase == 3 || phase == 4 || phase == 5 || phase == 6) {
             // second phase: browncoat and conehead zombies
@@ -202,6 +218,7 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
 
         zombies.add(zombie);
     }
+
     private void shootPeas(Plants plant) {
         if (plant.getName().equals("peashooter")) {
             for (Zombie zombie : zombies) {
@@ -215,7 +232,7 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
         } else if (plant.getName().equals("repeater")) {
             for (Zombie zombie : zombies) {
                 if (zombie.getY() + 50 == plant.getyCoord()) {
-                    if (time % 70 == 0 || time % 70 == 10) { // Shoot every 70 ticks, including at 35 ticks
+                    if (time % 70 == 0 || time % 70 == 10) { // shoot every 70 ticks, including at 10 ticks
                         peas.add(new Pea(plant.getxCoord() + plant.getImage().getWidth(), plant.getyCoord() + plant.getImage().getHeight() / 2 - 25, plant.getProjectileSpeed(), peaImage));
                     }
                 }
@@ -224,13 +241,13 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
     }
 
 
-
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
 
     @Override
-    public void mouseEntered(MouseEvent e) {}
-
-    @Override
-    public void mouseExited(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -238,110 +255,120 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
             time++;
             int elapsedSeconds = time / 60;
 
-            if (elapsedSeconds >= 180) {
-                phase = 7;
-            } else if (elapsedSeconds >= 140) {
-                phase = 6;
-            } else if (elapsedSeconds >= 120) {
-                phase = 5;
-            } else if (elapsedSeconds >= 100) {
-                phase = 4;
-            } else if (elapsedSeconds >= 80) {
-                phase = 3;
-            } else if (elapsedSeconds >= 60) {
-                phase = 2;
-            } else if (elapsedSeconds >= 40) {
-                phase = 1;
-            } else if (elapsedSeconds >= 30) {
-                phase = 0;
+            if (sun >= 2500 && !gameWon) {
+                gameWon = true;
             }
-
-            if (phase == 0) {
-                zombieSpawnInterval = 1200;
-            } else if (phase == 1) {
-                zombieSpawnInterval = 1000;
-            } else if (phase == 2) {
-                zombieSpawnInterval = 800;
-            } else if (phase == 3) {
-                zombieSpawnInterval = 600;
-            } else if (phase == 4) {
-                zombieSpawnInterval = 400;
-            } else if (phase == 5) {
-                zombieSpawnInterval = 300;
-            } else if (phase == 6) {
-                zombieSpawnInterval = 200;
-            } else {
-                zombieSpawnInterval = Math.max(60, zombieSpawnInterval - 30);
-            }
-            for (Plants plant : plants) {
-                shootPeas(plant);
-            }
-
-
-            // spawn sun every 800 ticks (24 seconds)
-            if (time % 800 == 0) {
-                for (Plants plant : plants) {
-                    if (plant.isSunflower()) {
-                        suns.add(new Sun(plant.getxCoord(), plant.getyCoord(), sunImg, true));
-                    }
+            for (Zombie zombie : zombies) {
+                if (zombie.getX() < 0) {
+                    gameOver = true;
+                    break;
                 }
             }
-
-            // spawn sky sun every 333 ticks (10 seconds)
-            if (time % 333 == 0) {
-                int randomX = (int) (Math.random() * (getWidth() - sunImg.getWidth()));
-                suns.add(new Sun(randomX, 0, sunImg, false));
-            }
-
-            // Update sun positions
-            for (int i = 0; i < suns.size(); i++) {
-                Sun sun = suns.get(i);
-                sun.update();
-                if (sun.getY() > getHeight()) {
-                    suns.remove(i);
-                    i--;
+            if (!gameWon && !gameOver) {
+                if (elapsedSeconds >= 180) {
+                    phase = 7;
+                } else if (elapsedSeconds >= 140) {
+                    phase = 6;
+                } else if (elapsedSeconds >= 120) {
+                    phase = 5;
+                } else if (elapsedSeconds >= 100) {
+                    phase = 4;
+                } else if (elapsedSeconds >= 80) {
+                    phase = 3;
+                } else if (elapsedSeconds >= 60) {
+                    phase = 2;
+                } else if (elapsedSeconds >= 40) {
+                    phase = 1;
+                } else if (elapsedSeconds >= 30) {
+                    phase = 0;
                 }
-            }
 
-            // Spawn zombies
-            zombieSpawnCounter++;
-            if (zombieSpawnCounter >= zombieSpawnInterval) {
-                zombieSpawnCounter = 0;
-                spawnZombie();
-            }
-
-
-            // Move peas
-            for (int i = 0; i < peas.size(); i++) {
-                Pea pea = peas.get(i);
-                pea.update();
-                if (pea.getX() > getWidth()) {
-                    peas.remove(i);
-                    i--;
+                if (phase == 0) {
+                    zombieSpawnInterval = 1200;
+                } else if (phase == 1) {
+                    zombieSpawnInterval = 1000;
+                } else if (phase == 2) {
+                    zombieSpawnInterval = 800;
+                } else if (phase == 3) {
+                    zombieSpawnInterval = 600;
+                } else if (phase == 4) {
+                    zombieSpawnInterval = 400;
+                } else if (phase == 5) {
+                    zombieSpawnInterval = 300;
+                } else if (phase == 6) {
+                    zombieSpawnInterval = 200;
                 } else {
-                    for (int j = 0; j < zombies.size(); j++) {
-                        Zombie zombie = zombies.get(j);
-                        if (pea.getBounds().intersects(zombie.getBounds())) {
-                            zombie.hit();
-                            peas.remove(i);
-                            i--;
-                            if (zombie.getHealth() <= 0) {
-                                zombies.remove(j);
-                                j--;
-                            }
-                            break;
+                    zombieSpawnInterval = Math.max(60, zombieSpawnInterval - 30);
+                }
+                for (Plants plant : plants) {
+                    shootPeas(plant);
+                }
+
+
+                // spawn sun every 800 ticks (24 seconds)
+                if (time % 800 == 0) {
+                    for (Plants plant : plants) {
+                        if (plant.isSunflower()) {
+                            suns.add(new Sun(plant.getxCoord(), plant.getyCoord(), sunImg, true));
                         }
                     }
                 }
-            }
 
-            // Move zombies
-            for (int i = 0; i < zombies.size(); i++) {
-                Zombie zombie = zombies.get(i);
-                zombie.update();
-                if (zombie.getX() < -60) {
-                    zombies.remove(i);
-                    i--;
+                // spawn sky sun every 333 ticks (10 seconds)
+                if (time % 333 == 0) {
+                    int randomX = (int) (Math.random() * (getWidth() - sunImg.getWidth()));
+                    suns.add(new Sun(randomX, 0, sunImg, false));
+                }
+
+                for (int i = 0; i < suns.size(); i++) {
+                    Sun sun = suns.get(i);
+                    sun.update();
+                    if (sun.getY() > getHeight()) {
+                        suns.remove(i);
+                        i--;
+                    }
+                }
+
+                // spawn zombies
+                zombieSpawnCounter++;
+                if (zombieSpawnCounter >= zombieSpawnInterval) {
+                    zombieSpawnCounter = 0;
+                    spawnZombie();
+                }
+
+
+                // move peas
+                for (int i = 0; i < peas.size(); i++) {
+                    Pea pea = peas.get(i);
+                    pea.update();
+                    if (pea.getX() > getWidth()) {
+                        peas.remove(i);
+                        i--;
+                    } else {
+                        for (int j = 0; j < zombies.size(); j++) {
+                            Zombie zombie = zombies.get(j);
+                            if (pea.getBounds().intersects(zombie.getBounds())) {
+                                zombie.hit();
+                                peas.remove(i);
+                                i--;
+                                if (zombie.getHealth() <= 0) {
+                                    zombies.remove(j);
+                                    j--;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // move zombies
+                for (int i = 0; i < zombies.size(); i++) {
+                    Zombie zombie = zombies.get(i);
+                    zombie.update();
+                    if (zombie.getX() < -60) {
+                        zombies.remove(i);
+                        i--;
+                    }
                 }
             }
         }
@@ -349,26 +376,29 @@ public class GraphicsPanel extends JPanel implements KeyListener, MouseListener,
     }
 
     private int getPlantCost(String plantName) {
-        switch (plantName) {
-            case "peashooter":
-                return PEASHOOTER_COST;
-            case "sunflower":
-                return SUNFLOWER_COST;
-            case "wallnut":
-                return WALLNUT_COST;
-            case "repeater":
-                return REPEATER_COST;
-            default:
-                return Integer.MAX_VALUE;
+        if (plantName.equals("peashooter")) {
+            return PEASHOOTER_COST;
+        } else if (plantName.equals("sunflower")) {
+            return SUNFLOWER_COST;
+        } else if (plantName.equals("wallnut")) {
+            return WALLNUT_COST;
+        } else if (plantName.equals("repeater")) {
+            return REPEATER_COST;
+        } else {
+            return Integer.MAX_VALUE;
         }
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {}
 
     @Override
-    public void keyPressed(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {
+    }
 
     @Override
-    public void keyReleased(KeyEvent e) {}
+    public void keyPressed(KeyEvent e) {
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
 }

@@ -13,6 +13,7 @@ public class WelcomePanel extends JPanel implements ActionListener {
     private JButton submitButton;
     private JButton clearButton;
     private JFrame enclosingFrame;
+
     private BufferedImage sunflower;
 
     public WelcomePanel(JFrame frame) {
@@ -23,8 +24,7 @@ public class WelcomePanel extends JPanel implements ActionListener {
             System.out.println(e.getMessage());
         }
         textField = new JTextField(10);
-        submitButton = new JButton("Submit");
-        add(textField);  // textField doesn't need a listener since nothing needs to happen when we type in text
+        submitButton = new JButton("Start");
         add(submitButton);
         submitButton.addActionListener(this);
     }
@@ -36,6 +36,7 @@ public class WelcomePanel extends JPanel implements ActionListener {
         g.setColor(Color.RED);
         g.drawImage(sunflower, 200, 50, null);
         submitButton.setLocation(50, 100);
+        g.drawString("Collect 2500 sun to win!", 10, 70);
     }
 
     // ACTIONLISTENER INTERFACE METHODS
